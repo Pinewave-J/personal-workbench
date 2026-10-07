@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "周期任务生成与幂等",
+    "quality_profile": "showcase",
+    "viewBox": [900, 380]
+  },
+  "lanes": [
+    { "id": "auto", "label": "自动补齐（进入待办看板触发）" },
+    { "id": "known", "label": "该月已生成过", "variant": "exception" }
+  ],
+  "mainPath": ["enter", "judge", "make"],
+  "nodes": [
+    { "id": "enter", "lane": "auto", "col": 0, "type": "frontend", "label": "进入待办看板", "sublabel": "只补当前月" },
+    { "id": "judge", "lane": "auto", "col": 2, "type": "backend", "label": "幂等判定", "sublabel": "该月是否生成过" },
+    { "id": "make", "lane": "auto", "col": 4, "type": "database", "label": "生成当月待办", "sublabel": "写入月份标记" },
+    { "id": "skip", "lane": "known", "col": 4, "type": "backend", "label": "跳过·不复活", "sublabel": "含已删实例", "tag": "幂等" }
+  ],
+  "edges": [
+    { "from": "enter", "to": "judge", "role": "main" },
+    { "from": "judge", "to": "make", "role": "main", "label": "未生成过" },
+    { "from": "judge", "to": "skip", "route": "drop", "fromSide": "bottom", "toSide": "top", "label": "已生成过" }
+  ],
+  "cards": [
+    {
+      "dot": "amber",
+      "title": "为什么不会重复",
+      "items": [
+        "幂等判据包含已删除实例，删过的月份不会自动重建",
+        "同一模板同月只有一条有效实例，数据库唯一索引兜底",
+        "生成只发生在当前月，浏览历史月份不会写库"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "两种触发方式",
+      "items": [
+        "进入待办看板：自动补齐当前月",
+        "周期任务页「生成本月」：手动补齐单条模板",
+        "所有 GET 请求保持只读，不再隐式写库"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "误删了想找回来",
+      "items": [
+        "该月实例被删过时，手动生成会提示「已存在但已删除」",
+        "可选择「恢复已删除实例」，把它改回待办而不是新建一条",
+        "恢复动作会记入操作日志，可追溯"
+      ]
+    }
+  ]
+}

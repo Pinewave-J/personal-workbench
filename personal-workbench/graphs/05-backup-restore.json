@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "备份与恢复数据流",
+    "quality_profile": "showcase",
+    "viewBox": [1280, 740]
+  },
+  "stages": [
+    { "label": "导出备份" },
+    { "label": "备份文件" },
+    { "label": "恢复前校验" },
+    { "label": "快照与写入" },
+    { "label": "结果与收尾" }
+  ],
+  "nodes": [
+    { "id": "exp", "type": "frontend", "label": "设置页导出", "sublabel": "10 张业务表", "stage": 0, "row": 2, "tag": "GET /export/backup" },
+    { "id": "bak", "type": "database", "label": "备份 JSON", "sublabel": "只含元数据", "stage": 1, "row": 2, "tag": "无文件二进制" },
+    { "id": "valid", "type": "backend", "label": "结构与版本校验", "sublabel": "列白名单 · 必填列", "stage": 2, "row": 2, "tag": "动库之前" },
+    { "id": "snap", "type": "database", "label": "恢复前快照", "sublabel": "VACUUM INTO", "stage": 3, "row": 1, "tag": "可回退" },
+    { "id": "wipe", "type": "backend", "label": "清表并回填", "sublabel": "按原 id · 单事务", "stage": 3, "row": 3, "tag": "失败即回滚" },
+    { "id": "ok", "type": "database", "label": "恢复完成", "sublabel": "返回统计与快照路径", "stage": 4, "row": 2 },
+    { "id": "miss", "type": "external", "label": "文件缺失", "sublabel": "uploads 不在备份里", "stage": 4, "row": 4, "tag": "需重新上传" }
+  ],
+  "flows": [
+    { "id": "exp-to-bak", "from": "exp", "to": "bak", "label": "序列化为 JSON", "classification": "文件下载" },
+    { "id": "bak-to-valid", "from": "bak", "to": "valid", "label": "POST /import/backup", "classification": "confirm=RESTORE", "variant": "emphasis" },
+    { "id": "valid-to-snap", "from": "valid", "to": "snap", "label": "校验通过才动数据", "classification": "坏备份在此返回 400", "variant": "emphasis" },
+    { "id": "snap-to-wipe", "from": "snap", "to": "wipe", "label": "快照成功才开始", "classification": "先备份再覆盖", "route": "straight", "fromSide": "bottom", "toSide": "top", "labelDx": 76, "labelDy": 30 },
+    { "id": "wipe-to-ok", "from": "wipe", "to": "ok", "label": "全部写入成功", "classification": "COMMIT", "variant": "emphasis" },
+    { "id": "ok-to-miss", "from": "ok", "to": "miss", "label": "核对开标结果文件", "classification": "需补传原件", "route": "straight", "fromSide": "bottom", "toSide": "top", "labelDx": 76, "labelDy": 30 }
+  ],
+  "cards": [
+    {
+      "dot": "amber",
+      "title": "为什么先快照再动手",
+      "items": [
+        "清库之前先写一份 VACUUM INTO 快照，失败也能回退",
+        "校验放在动数据之前：坏备份会被拒绝且数据不变",
+        "清表与回填在同一个事务里，任一行失败整体回滚"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "两种合法路径",
+      "items": [
+        "自己的备份往返恢复：版本、列名、必填列全部对得上",
+        "旧备份可能含子行引用不存在的父行，可选择跳过并报数",
+        "跳过时会在响应与操作日志里给出具体条数"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "备份不含文件二进制",
+      "items": [
+        "备份 JSON 只存元数据，开标结果原件不在其中",
+        "恢复后在「开标结果」里会标出文件缺失",
+        "同一条记录用「重新上传」补回原件，不会产生重复记录"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "generatedAt": "2026-09-11",
+  "note": "系统图谱清单：由 archify 从同目录的规格 JSON 生成；后端逻辑改动后需重新生成（见 README.md）",
+  "graphs": [
+    {
+      "file": "01-bid-lifecycle.html",
+      "spec": "01-bid-lifecycle.json",
+      "type": "lifecycle",
+      "title": "投标项目状态机",
+      "desc": "跟踪中 → 已报名 → 已购标书 → 已投标 → 已开标 → 中标 / 未中标 / 流标；终态不可再流转，任何非终态都能判定流标。",
+      "nodes": 8,
+      "edges": 7
+    },
+    {
+      "file": "02-customer-loop.html",
+      "spec": "02-customer-loop.json",
+      "type": "workflow",
+      "title": "客户跟进 ↔ 待办双向闭环",
+      "desc": "记录跟进 → 填下次日期 → 生成客户待办 → 完成待办 → 回写客户 → 生成下一条；含幂等保护与已知例外。",
+      "nodes": 6,
+      "edges": 5
+    },
+    {
+      "file": "03-recurring-idempotent.html",
+      "spec": "03-recurring-idempotent.json",
+      "type": "workflow",
+      "title": "周期任务生成与幂等",
+      "desc": "进入待办看板只补当前月；幂等判据含已删除实例（删了不复活）；手动生成遇到已存在会提示并可恢复。",
+      "nodes": 4,
+      "edges": 3
+    },
+    {
+      "file": "04-architecture.html",
+      "spec": "04-architecture.json",
+      "type": "architecture",
+      "title": "系统架构",
+      "desc": "浏览器 → 前端四件套 → Express(:8787) → SQLite，以及本机文件（uploads / backups / 图谱）与外部 CDN 依赖的降级路径。",
+      "nodes": 6,
+      "edges": 5
+    },
+    {
+      "file": "05-backup-restore.html",
+      "spec": "05-backup-restore.json",
+      "type": "dataflow",
+      "title": "备份与恢复数据流",
+      "desc": "导出只含元数据 → 校验（列白名单/必填列）→ VACUUM INTO 快照 → 清表回填（单事务失败回滚）→ 文件需补传。",
+      "nodes": 7,
+      "edges": 6
+    },
+    {
+      "file": "06-result-upload.html",
+      "spec": "06-result-upload.json",
+      "type": "sequence",
+      "title": "开标结果上传 · 预览 · 补传",
+      "desc": "POST 上传落盘 → GET 预览（inline）→ 文件缺失标记 → PUT 原地补传，含 iframe sandbox 与路径校验的安全边界。",
+      "nodes": 5,
+      "edges": 14
+    }
+  ]
+}

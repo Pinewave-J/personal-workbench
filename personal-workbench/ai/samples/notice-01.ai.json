@@ -1,0 +1,104 @@
+{
+  "schemaVersion": 1,
+  "engine": "dsh",
+  "suggestions": [
+    {
+      "field": "name",
+      "value": "杭州市某区智慧交通信号优化提升工程（三期）全过程工程咨询服务",
+      "confidence": "high",
+      "evidence": "杭州市某区智慧交通信号优化提升工程（三期）全过程工程咨询服务（公告首行标题，无「项目名称：」前缀）"
+    },
+    {
+      "field": "tenderNo",
+      "value": "HZZB2026-0871",
+      "confidence": "high",
+      "evidence": "招标编号：HZZB2026-0871"
+    },
+    {
+      "field": "tenderer",
+      "value": "杭州市某区住房和城乡建设局",
+      "confidence": "high",
+      "evidence": "招标人：杭州市某区住房和城乡建设局"
+    },
+    {
+      "field": "agency",
+      "value": "浙江华信工程咨询有限公司",
+      "confidence": "high",
+      "evidence": "招标代理机构：浙江华信工程咨询有限公司"
+    },
+    {
+      "field": "region",
+      "value": "浙江省·杭州市",
+      "confidence": "high",
+      "evidence": "建设地点：浙江省·杭州市"
+    },
+    {
+      "field": "lotNo",
+      "value": "标段二",
+      "confidence": "medium",
+      "evidence": "本次招标共分两个标段，本公告对应标段二（全过程工程咨询）"
+    },
+    {
+      "field": "duration",
+      "value": "自合同签订之日起 18 个月",
+      "confidence": "high",
+      "evidence": "服务期限：自合同签订之日起 18 个月"
+    },
+    {
+      "field": "budget",
+      "value": 3260,
+      "unit": "万元",
+      "confidence": "high",
+      "evidence": "最高限价：人民币叁仟贰佰陆拾万元整（3260万元）"
+    },
+    {
+      "field": "bond",
+      "value": 30,
+      "unit": "万元",
+      "confidence": "high",
+      "evidence": "投标保证金：人民币叁拾万元整，须于投标截止时间前到账。"
+    },
+    {
+      "field": "validityDays",
+      "value": 120,
+      "confidence": "high",
+      "evidence": "自投标截止之日起 120 日历天。"
+    },
+    {
+      "field": "deadline",
+      "value": "2026-10-20",
+      "confidence": "high",
+      "evidence": "投标文件递交截止时间：2026年10月20日9时30分"
+    },
+    {
+      "field": "category",
+      "value": "全过程咨询",
+      "confidence": "high",
+      "evidence": "本项目为智慧交通信号优化提升工程（三期）全过程工程咨询服务"
+    },
+    {
+      "field": "industry",
+      "value": "市政公用工程",
+      "confidence": "medium",
+      "evidence": "同时具备市政公用工程监理甲级资质"
+    },
+    {
+      "field": "contactName",
+      "value": "陈工",
+      "confidence": "high",
+      "evidence": "联系人：陈工"
+    },
+    {
+      "field": "contactPhone",
+      "value": "0571-8612-0043",
+      "confidence": "high",
+      "evidence": "联系电话：0571-8612-0043"
+    },
+    {
+      "field": "notes",
+      "value": "【资格要求】工程咨询单位甲级资信（市政公用工程）+ 市政公用工程监理甲级资质；近三年（2023-01-01 至今）≥2 项合同金额 2000 万元以上全过程工程咨询业绩；项目负责人须具备注册咨询工程师（投资）及高级工程师职称；须未被列入失信被执行人名单。【重要】不接受联合体投标。【报价口径】最高限价 3260 万元。【时间】投标文件递交截止 2026-10-20 09:30，开标时间同截止时间，地点：杭州市某区公共资源交易中心三楼开标厅。【资金来源】区财政拨款。",
+      "confidence": "high",
+      "evidence": "三、投标人资格要求 1.…5. 本项目不接受联合体投标。6. 投标人须未被列入失信被执行人名单。"
+    }
+  ]
+}

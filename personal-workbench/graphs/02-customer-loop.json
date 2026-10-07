@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "客户跟进 ↔ 待办双向闭环",
+    "quality_profile": "showcase",
+    "viewBox": [900, 380]
+  },
+  "lanes": [
+    { "id": "cust", "label": "客户档案" },
+    { "id": "task", "label": "待办任务" }
+  ],
+  "mainPath": ["rec", "next", "gen", "done", "back", "loop"],
+  "nodes": [
+    { "id": "rec", "lane": "cust", "col": 0, "type": "frontend", "label": "记录跟进", "sublabel": "跟进内容" },
+    { "id": "next", "lane": "cust", "col": 1, "type": "frontend", "label": "填下次日期", "sublabel": "可留空" },
+    { "id": "gen", "lane": "task", "col": 2, "type": "backend", "label": "生成客户待办", "sublabel": "按客户+日期幂等" },
+    { "id": "done", "lane": "task", "col": 3, "type": "frontend", "label": "完成待办", "sublabel": "可填新日期" },
+    { "id": "back", "lane": "cust", "col": 4, "type": "database", "label": "回写客户", "sublabel": "最近跟进时间" },
+    { "id": "loop", "lane": "task", "col": 5, "type": "backend", "label": "生成下一条", "sublabel": "闭环" }
+  ],
+  "edges": [
+    { "from": "rec", "to": "next", "role": "main" },
+    { "from": "next", "to": "gen", "role": "main", "route": "drop", "fromSide": "bottom", "toSide": "top", "label": "有日期才生成" },
+    { "from": "gen", "to": "done", "role": "main" },
+    { "from": "done", "to": "back", "role": "main", "route": "drop", "fromSide": "bottom", "toSide": "top", "label": "完成时回写" },
+    { "from": "back", "to": "loop", "role": "main", "route": "drop", "fromSide": "bottom", "toSide": "top" }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "闭环靠两次联动",
+      "items": [
+        "填了下次跟进日期，才会生成客户待办",
+        "完成待办时可再填日期，直接生成下一条",
+        "客户的最近跟进时间由完成动作回写"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "幂等保护",
+      "items": [
+        "同一客户同一日期只保留一条未完成待办",
+        "重复记录跟进不会堆出重复待办",
+        "待办来源标记为 customer，便于区分手动任务"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "退出与已知例外",
+      "items": [
+        "删除客户会连带取消其未完成待办",
+        "客户标记流失后不再出现在跟进提醒里",
+        "改期目前不迁移旧待办，需人工处理（已知待改进）"
+      ]
+    }
+  ]
+}

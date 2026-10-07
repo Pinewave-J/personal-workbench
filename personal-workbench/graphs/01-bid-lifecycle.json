@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "diagram_type": "lifecycle",
+  "meta": {
+    "title": "投标项目状态机",
+    "quality_profile": "showcase",
+    "viewBox": [1080, 660]
+  },
+  "lanes": [
+    { "id": "main", "label": "投标推进（主流程）" },
+    { "id": "terminal", "label": "终态 · 不可再流转" }
+  ],
+  "states": [
+    { "id": "track", "type": "start", "label": "跟踪中", "sublabel": "已登记关注", "lane": "main", "col": 0, "step": "01", "tag": "起点" },
+    { "id": "reg", "type": "active", "label": "已报名", "sublabel": "完成报名", "lane": "main", "col": 1, "step": "02" },
+    { "id": "doc", "type": "active", "label": "已购标书", "sublabel": "下载招标文件", "lane": "main", "col": 2, "step": "03" },
+    { "id": "submit", "type": "active", "label": "已投标", "sublabel": "递交投标文件", "lane": "main", "col": 3, "step": "04" },
+    { "id": "opened", "type": "decision", "label": "已开标", "sublabel": "等待结果", "lane": "main", "col": 4, "step": "05", "tag": "分水岭" },
+    { "id": "aborted", "type": "failure", "label": "流标", "sublabel": "非终态均可判", "lane": "terminal", "col": 0, "tag": "终态" },
+    { "id": "lost", "type": "failure", "label": "未中标", "sublabel": "他人中标", "lane": "terminal", "col": 1, "tag": "终态" },
+    { "id": "won", "type": "success", "label": "中标", "sublabel": "累计中标", "lane": "terminal", "col": 2, "tag": "终态" }
+  ],
+  "transitions": [
+    { "id": "t-track-reg", "from": "track", "to": "reg" },
+    { "id": "t-reg-doc", "from": "reg", "to": "doc" },
+    { "id": "t-doc-submit", "from": "doc", "to": "submit" },
+    { "id": "t-submit-opened", "from": "submit", "to": "opened" },
+    { "id": "t-opened-won", "from": "opened", "to": "won", "route": "straight", "fromSide": "bottom", "toSide": "top" },
+    { "id": "t-opened-lost", "from": "opened", "to": "lost", "route": "drop", "fromSide": "bottom", "toSide": "top" },
+    { "id": "t-doc-aborted", "from": "doc", "to": "aborted", "route": "straight", "fromSide": "bottom", "toSide": "top" }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "主流程只有一条",
+      "items": [
+        "跟踪中 → 已报名 → 已购标书 → 已投标 → 已开标",
+        "每一跳都由后端 canTransition 校验，前端下拉只给可达状态",
+        "流转会写入状态历史，可回溯每一次变更"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "终态不可再流转",
+      "items": [
+        "中标 / 未中标 / 流标 三个终态都没有出边",
+        "开标后排结果：中标、未中标、流标三选一",
+        "首页环形图与统计页按同一口径统计"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "流标是通用出口",
+      "items": [
+        "任何非终态都能直接判定流标（已报名、已购标书、已投标…）",
+        "图中只画一条代表边：已购标书 → 流标",
+        "流标与未中标含义不同，统计时分开看"
+      ]
+    }
+  ]
+}

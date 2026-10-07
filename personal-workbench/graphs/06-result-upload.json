@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "开标结果上传 · 预览 · 补传链路",
+    "quality_profile": "showcase",
+    "viewBox": [1240, 745],
+    "column_fit": "spread"
+  },
+  "participants": [
+    { "id": "ui", "type": "frontend", "label": "开标结果页", "sublabel": "浏览器" },
+    { "id": "api", "type": "backend", "label": "Express", "sublabel": ":8787" },
+    { "id": "disk", "type": "database", "label": "uploads/", "sublabel": "文件原件" },
+    { "id": "meta", "type": "database", "label": "bid_result", "sublabel": "元数据" },
+    { "id": "prev", "type": "frontend", "label": "预览 iframe", "sublabel": "sandbox" }
+  ],
+  "messages": [
+    { "id": "upload", "from": "ui", "to": "api", "y": 188, "label": "POST /results（base64）", "variant": "emphasis" },
+    { "id": "write-file", "from": "api", "to": "disk", "y": 224, "label": "写入随机名文件" },
+    { "id": "insert-meta", "from": "api", "to": "meta", "y": 260, "label": "INSERT 元数据" },
+    { "id": "meta-ok", "from": "meta", "to": "api", "y": 296, "label": "id · exists=true", "variant": "return" },
+    { "id": "upload-done", "from": "api", "to": "ui", "y": 332, "label": "201 Created", "variant": "return" },
+    { "id": "preview", "from": "ui", "to": "api", "y": 368, "label": "GET /results/:id/content", "variant": "emphasis" },
+    { "id": "read-file", "from": "api", "to": "disk", "y": 404, "label": "readFileSync" },
+    { "id": "file-missing", "from": "disk", "to": "api", "y": 440, "label": "文件不存在 → 404", "variant": "return" },
+    { "id": "mark-missing", "from": "api", "to": "ui", "y": 476, "label": "exists=false（界面标缺失）", "variant": "return" },
+    { "id": "reupload", "from": "ui", "to": "api", "y": 512, "label": "PUT /results/:id/content", "variant": "emphasis" },
+    { "id": "replace-file", "from": "api", "to": "disk", "y": 548, "label": "写新文件并删旧文件" },
+    { "id": "update-meta", "from": "api", "to": "meta", "y": 584, "label": "UPDATE 名称 / 大小 / 时间" },
+    { "id": "reupload-done", "from": "api", "to": "ui", "y": 620, "label": "200 原件已挂回原记录", "variant": "return" },
+    { "id": "preview-open", "from": "ui", "to": "prev", "y": 656, "label": "iframe sandbox 内预览" }
+  ],
+  "activations": [
+    { "participant": "api", "from": 184, "to": 660, "type": "backend" },
+    { "participant": "ui", "from": 184, "to": 336, "type": "frontend" },
+    { "participant": "disk", "from": 220, "to": 232, "type": "database" },
+    { "participant": "meta", "from": 256, "to": 300, "type": "database" },
+    { "participant": "ui", "from": 364, "to": 480, "type": "frontend" },
+    { "participant": "disk", "from": 400, "to": 444, "type": "database" },
+    { "participant": "ui", "from": 508, "to": 624, "type": "frontend" },
+    { "participant": "disk", "from": 544, "to": 556, "type": "database" },
+    { "participant": "meta", "from": 580, "to": 592, "type": "database" }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "三条命令构成一生",
+      "items": [
+        "上传：POST /results 把 base64 落盘并写元数据",
+        "预览：GET /results/:id/content 以 inline 返回原件",
+        "补传：PUT /results/:id/content 把原件挂回原记录"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "文件缺失不是意外",
+      "items": [
+        "备份 JSON 只含元数据，恢复后不会带回文件二进制",
+        "列表接口会算出 exists，界面据此显示「文件缺失」",
+        "缺失行的操作变成「重新上传」，预览按钮被替换"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "预览的安全边界",
+      "items": [
+        "外链结果 HTML 在 iframe 里以 sandbox 打开，禁其脚本",
+        "下载端用 relative 判定路径，防止越出 uploads 目录",
+        "响应带 nosniff，避免把内容当别的类型执行"
+      ]
+    }
+  ]
+}

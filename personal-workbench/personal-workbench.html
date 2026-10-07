@@ -1,0 +1,112 @@
+<!doctype html>
+<!--
+  ============================================================================
+  个人工作台 (Personal Workbench) —— 投标 / 任务 / 客户 / 知识库(占位)
+  ============================================================================
+  版本：v1.0（由「投标信息登记·个人工作台」扩张而来）
+  后端：backend/  Express + SQLite，Base URL = http://127.0.0.1:8787/api/v1
+  金额：元入库（API 层）、前端显示万元（÷10000）——仅投标模块沿用
+  新模块：任务&待办看板（每月固定周期任务自动生成当期待办、重要紧急4象限、时间节点提醒）
+          客户档案 / 客户跟进记录（跟进记录填下次跟进日期 → 自动生成待办，双向联动）
+          知识库 = 导航占位页（预留本地知识库接口，待接入）
+  系统能力：本地 SQLite 存储、全量备份 / 恢复、跨模块全局搜索、各模块 CSV(Excel) 导出
+  ============================================================================
+-->
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>个人工作台 · 投标 / 任务 / 客户</title>
+  <!-- 主题引导：首屏渲染前写入 data-theme，避免浅色用户看到一帧深色（防闪屏） -->
+  <script>
+    (function () {
+      var t = "dark";
+      try { t = localStorage.getItem("pw-theme") === "light" ? "light" : "dark"; } catch (e) { /* file:// 下可能不可用 */ }
+      document.documentElement.dataset.theme = t;
+    })();
+  </script>
+  <link rel="stylesheet" href="./personal-workbench.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-logo"><svg class="ic" width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="currentColor" stroke="none"/></svg></div>
+        <div>
+          <div class="brand-name">个人工作台</div>
+          <div class="brand-tag">投标 · 任务 · 客户</div>
+        </div>
+      </div>
+      <div class="searchbox">
+        <span class="icon"><svg class="ic" width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+        <input id="globalSearch" type="text" placeholder="全局搜索：项目 / 任务 / 客户…" autocomplete="off" />
+        <div class="search-panel" id="searchPanel"></div>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn btn-green" onclick="App.openTaskForm()"><svg class="ic" width="13" height="13" viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> 新增任务</button>
+        <button class="btn btn-ghost theme-toggle" id="themeToggle" onclick="App.toggleTheme()" title="切换主题" aria-label="切换主题"></button>
+        <button class="btn btn-ghost" onclick="App.go('settings')"><svg class="ic" width="13" height="13" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> 设置</button>
+      </div>
+    </header>
+
+    <aside class="sidebar" id="sidebar"></aside>
+    <main class="main" id="main"></main>
+  </div>
+
+  <div class="modal-mask" id="modalMask">
+    <div class="modal">
+      <div class="modal-head">
+        <h3 id="modalTitle">新增投标登记</h3>
+        <button class="close" onclick="App.closeForm()">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-grid" id="formBody"></div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn btn-ghost" onclick="App.closeForm()">取消</button>
+        <button class="btn btn-primary" onclick="App.saveForm()">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== 预览弹窗 ===================== -->
+  <div class="modal-mask" id="previewMask">
+    <div class="modal" style="width:960px; max-width:96vw">
+      <div class="modal-head">
+        <h3 id="previewTitle">预览</h3>
+        <button class="close" onclick="App.closePreview()">×</button>
+      </div>
+      <div class="modal-body" id="previewBody" style="max-height:75vh; overflow:auto"></div>
+    </div>
+  </div>
+
+  <!-- ===================== 确认弹窗（替代原生 confirm，沙箱内可用） ===================== -->
+  <div class="modal-mask" id="confirmMask" style="z-index:300">
+    <div class="modal" style="width:440px; max-width:92vw">
+      <div class="modal-head">
+        <h3 id="confirmTitle">确认操作</h3>
+        <button class="close" onclick="App.closeConfirm()">×</button>
+      </div>
+      <div class="modal-body" id="confirmBody" style="max-height:none"></div>
+      <div class="modal-foot">
+        <button class="btn btn-ghost" onclick="App.closeConfirm()">取消</button>
+        <button class="btn btn-primary" id="confirmOkBtn" onclick="App.confirmOk()">确定</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <input type="file" id="importFile" accept=".csv,.json" style="display:none" />
+  <input type="file" id="restoreFile" accept=".json" style="display:none" />
+
+  <!-- Excel 预览解析库（离线时自动降级为下载） -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <!-- 配置与文案（先于主脚本加载）
+       注：这里刻意不加 ?v= 之类的查询串做缓存清理——工作台的站点路由是否忽略查询串无法从沙箱内验证，
+       猜错会让 CSS/JS 整体 404（页面全坏），代价远大于偶发缓存。
+       改动是否已生效，看侧栏底部 / 设置页显示的「前端版本」即可。 -->
+  <script src="./personal-workbench.config.js"></script>
+  <script src="./personal-workbench.js"></script>
+</body>
+</html>

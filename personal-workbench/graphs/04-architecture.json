@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "个人工作台系统架构",
+    "quality_profile": "showcase",
+    "viewBox": [1060, 580]
+  },
+  "components": [
+    { "id": "ui", "type": "external", "label": "浏览器 / 工作台窗口", "sublabel": "DSH 窗口1 或 file://", "pos": [30, 250], "size": [150, 64] },
+    { "id": "fe", "type": "frontend", "label": "前端四件套", "sublabel": "html · css · js · config", "pos": [230, 250], "size": [165, 64] },
+    { "id": "ex", "type": "backend", "label": "Express 服务", "sublabel": "127.0.0.1:8787 · 16 模块", "pos": [445, 250], "size": [165, 64], "tag": "13 组路由" },
+    { "id": "db", "type": "database", "label": "SQLite 库", "sublabel": "workbench.db (WAL)", "pos": [660, 250], "size": [160, 64], "tag": "v4" },
+    { "id": "fs", "type": "database", "label": "本机文件", "sublabel": "uploads/ · data/backups/ · 图谱 HTML", "pos": [445, 410], "size": [230, 64], "tag": "VACUUM INTO" },
+    { "id": "jd", "type": "external", "label": "SheetJS CDN", "sublabel": "jsdelivr · Excel 预览", "pos": [230, 100], "size": [165, 56] }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "本机运行（离线可用）", "wraps": ["fe", "ex", "db", "fs"] },
+    { "kind": "region", "label": "外部网络依赖（离线自动降级）", "wraps": ["jd"] }
+  ],
+  "connections": [
+    { "id": "ui-to-fe", "from": "ui", "to": "fe", "label": "加载页面", "labelDy": 64 },
+    { "id": "fe-to-ex", "from": "fe", "to": "ex", "label": "fetch /api/v1（CORS *）", "variant": "emphasis", "labelDy": 64 },
+    { "id": "ex-to-db", "from": "ex", "to": "db", "label": "SQL（同步）", "variant": "emphasis", "labelDy": 64 },
+    { "id": "ex-to-fs", "from": "ex", "to": "fs", "label": "读写原件 · 快照 · 图谱托管", "fromSide": "bottom", "toSide": "top", "labelDx": 92 },
+    { "id": "fe-to-jd", "from": "fe", "to": "jd", "label": "按需拉取", "variant": "dashed" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "请求链路",
+      "items": [
+        "前端只经 fetch 调 /api/v1，CORS 全开便于本地直开",
+        "13 组路由共用统一响应 {success, data, error}",
+        "数据全在本机 SQLite：无云、无账号、无外传"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "本机文件（都在工作区内）",
+      "items": [
+        "workbench.db 是 WAL 模式，主库文件可能只有 1 页",
+        "开标结果原件在 uploads/，备份 JSON 不含二进制",
+        "data/backups/ 存 VACUUM INTO 快照；图谱 HTML 由 /api/v1/graphs 托管"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "外部依赖与降级",
+      "items": [
+        "Excel 预览靠 jsdelivr 上的 SheetJS，离线时降级为下载",
+        "系统图谱 HTML 内引 Google Fonts，离线降级为系统字体",
+        "除这两处外，其余功能完全离线可用"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "name": "bid-workbench-backend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "投标信息登记工作台 后端（P1：项目 CRUD + 状态机 + 状态历史）",
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning src/index.js",
+    "dev": "node --watch --disable-warning=ExperimentalWarning src/index.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}
